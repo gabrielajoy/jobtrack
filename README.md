@@ -8,6 +8,8 @@ An open-source job application tracker to help manage your job search.
 - Store company info, salaries, and important dates
 - Manage interview schedules and notes
 - Analytics dashboard to track your progress
+- ATS score validation (next version)
+- Cover Letter Generator (next version)
 
 ## Tech Stack
 
