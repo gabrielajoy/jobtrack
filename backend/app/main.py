@@ -2,7 +2,7 @@
 JobTrack FastAPI Application
 Main entry point for the API
 """
-
+from .ats_service import analyze_resume_ats, generate_cover_letter
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
@@ -10,8 +10,12 @@ import sqlite3
 from contextlib import contextmanager
 
 from .database import db
-from .models import Job, JobCreate, JobUpdate, Resume, ResumeCreate, ResumeUpdate
-
+from .models import (
+    Job, JobCreate, JobUpdate, 
+    Resume, ResumeCreate, ResumeUpdate,
+    ATSAnalysisRequest, ATSAnalysisResponse,
+    CoverLetterRequest, CoverLetterResponse
+)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -286,3 +290,29 @@ def update_resume(resume_id: int, resume_update: ResumeUpdate):
         updated_resume = cursor.fetchone()
         
         return dict(updated_resume)    
+    
+# ==================== ATS ANALYSIS ENDPOINTS ====================
+
+@app.post("/api/ats/analyze", response_model=ATSAnalysisResponse)
+def analyze_ats(request: ATSAnalysisRequest):
+    """
+    Analyze a resume against a job description for ATS compatibility.
+    
+    Returns an ATS score, missing keywords, and improvement suggestions.
+    """
+    result = analyze_resume_ats(request.resume_text, request.job_description)
+    return result
+
+
+@app.post("/api/ats/cover-letter", response_model=CoverLetterResponse)
+def create_cover_letter(request: CoverLetterRequest):
+    """
+    Generate a personalized cover letter based on resume and job description.
+    """
+    cover_letter = generate_cover_letter(
+        resume_text=request.resume_text,
+        job_description=request.job_description,
+        company_name=request.company_name,
+        tone=request.tone
+    )
+    return {"cover_letter": cover_letter}
