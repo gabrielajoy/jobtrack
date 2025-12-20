@@ -146,3 +146,24 @@ class CoverLetterRequest(BaseModel):
 class CoverLetterResponse(BaseModel):
     """Response model for cover letter"""
     cover_letter: str        
+
+# ==================== JOB EXTRACTION MODELS ====================
+
+class JobExtractRequest(BaseModel):
+    """Request model for extracting job details from description"""
+    job_description: str
+
+
+class JobExtractFromURLRequest(BaseModel):
+    """Request model for extracting job details from URL"""
+    url: str
+
+
+class JobExtractResponse(BaseModel):
+    """Response model for extracted job details"""
+    company: Optional[str] = None
+    position: Optional[str] = None
+    location: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    job_description: Optional[str] = None
