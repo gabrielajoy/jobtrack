@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from .database import db
 from .models import (
     Job, JobCreate, JobUpdate, 
+    Resume, ResumeCreate, ResumeUpdate
     Resume, ResumeCreate, ResumeUpdate,
     ATSAnalysisRequest, ATSAnalysisResponse,
     CoverLetterRequest, CoverLetterResponse,
@@ -23,6 +24,34 @@ from .ats_service import (
     extract_job_details,
     fetch_and_extract_from_url
 )
+
+from typing import List, Optional  # Add Optional!
+from pydantic import BaseModel
+
+# ... other imports ...
+
+# ATS Models (define here in main.py)
+class ATSAnalysisRequest(BaseModel):
+    resume_text: str
+    job_description: str
+    resume_id: Optional[int] = None
+
+class ATSAnalysisResponse(BaseModel):
+    success: bool
+    score: int
+    missing_keywords: List[str]
+    suggestions: List[str]
+    summary: str
+
+class CoverLetterRequest(BaseModel):
+    resume_text: str
+    job_description: str
+    company_name: str
+    tone: str = "professional"
+
+class CoverLetterResponse(BaseModel):
+    success: bool
+    cover_letter: str
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -288,19 +317,99 @@ def update_resume(resume_id: int, resume_update: ResumeUpdate):
         updated_resume = cursor.fetchone()
         
         return dict(updated_resume)
+# Add this import at the top
+from .ats_service import analyze_resume_ats, generate_cover_letter
+
+# Add these models after your other Pydantic models
+class ATSAnalysisRequest(BaseModel):
+    """Request for ATS analysis"""
+    resume_text: str
+    job_description: str
+    resume_id: Optional[int] = None
+
+
+class CoverLetterRequest(BaseModel):
+    """Request for cover letter generation"""
+    resume_text: str
+    job_description: str
+    company_name: str
+    tone: str = "professional"
+
 
 
 # ==================== ATS ANALYSIS ENDPOINTS ====================
 
-@app.post("/api/ats/analyze", response_model=ATSAnalysisResponse)
+# Add these endpoints with your resume endpoints
+@app.post("/api/analyze-ats")
 def analyze_ats(request: ATSAnalysisRequest):
+    """
+    Analyze resume against job description for ATS compatibility
+    
+    Returns score, missing keywords, and improvement suggestions
+    """
+    try:
+        result = analyze_resume_ats(
+            resume_text=request.resume_text,
+            job_description=request.job_description
+        )
+        
+        # Optionally update resume record if resume_id provided
+        if request.resume_id:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Store analysis as JSON string
+                import json
+                analysis_json = json.dumps(result)
+                
+                cursor.execute("""
+                    UPDATE resumes 
+                    SET ats_score = ?, ats_analysis = ?
+                    WHERE id = ?
+                """, (result['score'], analysis_json, request.resume_id))
+                
+                conn.commit()
+        
+        return {
+            "success": True,
+            **result
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"ATS analysis failed: {str(e)}"
+        )
     """Analyze a resume against a job description for ATS compatibility"""
     result = analyze_resume_ats(request.resume_text, request.job_description)
     return result
 
 
-@app.post("/api/ats/cover-letter", response_model=CoverLetterResponse)
+@app.post("/api/generate-cover-letter")
 def create_cover_letter(request: CoverLetterRequest):
+    """
+    Generate a personalized cover letter using AI
+    
+    Creates a tailored cover letter based on resume and job description
+    """
+    try:
+        cover_letter = generate_cover_letter(
+            resume_text=request.resume_text,
+            job_description=request.job_description,
+            company_name=request.company_name,
+            tone=request.tone
+        )
+        
+        return {
+            "success": True,
+            "cover_letter": cover_letter
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Cover letter generation failed: {str(e)}"
+        )        
     """Generate a personalized cover letter"""
     cover_letter = generate_cover_letter(
         resume_text=request.resume_text,
