@@ -2,6 +2,7 @@
 Pydantic models for request/response validation
 """
 
+from typing import Optional, List
 from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -119,3 +120,50 @@ class Resume(ResumeBase):
     
     class Config:
         from_attributes = True
+
+class ATSAnalysisRequest(BaseModel):
+    """Request model for ATS analysis"""
+    resume_text: str
+    job_description: str
+
+
+class ATSAnalysisResponse(BaseModel):
+    """Response model for ATS analysis"""
+    score: int
+    missing_keywords: List[str]
+    suggestions: List[str]
+    summary: str
+
+
+class CoverLetterRequest(BaseModel):
+    """Request model for cover letter generation"""
+    resume_text: str
+    job_description: str
+    company_name: str
+    tone: Optional[str] = "professional"
+
+
+class CoverLetterResponse(BaseModel):
+    """Response model for cover letter"""
+    cover_letter: str        
+
+# ==================== JOB EXTRACTION MODELS ====================
+
+class JobExtractRequest(BaseModel):
+    """Request model for extracting job details from description"""
+    job_description: str
+
+
+class JobExtractFromURLRequest(BaseModel):
+    """Request model for extracting job details from URL"""
+    url: str
+
+
+class JobExtractResponse(BaseModel):
+    """Response model for extracted job details"""
+    company: Optional[str] = None
+    position: Optional[str] = None
+    location: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    job_description: Optional[str] = None
