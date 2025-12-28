@@ -3,215 +3,1508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JobTrack - Your Job Search Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <title>JobTrack - AI-Powered Job Application Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --bg-hover: #22222e;
+            --accent-primary: #6366f1;
+            --accent-secondary: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #27272a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px 40px;
+            background: var(--bg-primary);
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .stat-card.wishlist::before { background: var(--text-muted); }
+        .stat-card.applied::before { background: var(--info); }
+        .stat-card.interviewing::before { background: var(--warning); }
+        .stat-card.offer::before { background: var(--success); }
+        .stat-card.rejected::before { background: var(--danger); }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        /* Cards & Sections */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Jobs Table */
+        .jobs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .jobs-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .jobs-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .jobs-table tr:hover td {
+            background: var(--bg-hover);
+        }
+
+        .company-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .company-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .company-info h4 {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .company-info span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-wishlist { background: rgba(113, 113, 122, 0.2); color: var(--text-muted); }
+        .status-applied { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .status-interviewing { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-offer { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+        /* ATS Score Circle */
+        .ats-score-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .ats-score-circle {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .ats-score-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .ats-score-bg {
+            fill: none;
+            stroke: var(--border-color);
+            stroke-width: 12;
+        }
+
+        .ats-score-fill {
+            fill: none;
+            stroke: var(--accent-primary);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 565;
+            stroke-dashoffset: 565;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        .ats-score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .ats-score-value {
+            font-size: 48px;
+            font-weight: 700;
+        }
+
+        .ats-score-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Keywords */
+        .keywords-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .keyword-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--danger);
+        }
+
+        .keyword-tag.found {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        /* Suggestions List */
+        .suggestions-list {
+            list-style: none;
+        }
+
+        .suggestions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .suggestions-list li:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--accent-primary);
+        }
+
+        /* Cover Letter Preview */
+        .cover-letter-preview {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Tone Selector */
+        .tone-options {
+            display: flex;
+            gap: 12px;
+        }
+
+        .tone-option {
+            flex: 1;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tone-option:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .tone-option.selected {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .tone-option h4 {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tone-option p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--info); }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Two column layout for ATS */
+        .ats-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .ats-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <nav class="sidebar">
-        <div class="logo">
-            <span class="logo-icon">◆</span>
-            <span class="logo-text">JobTrack</span>
-        </div>
-        <ul class="nav-links">
-            <li class="nav-item active" data-page="dashboard"><span class="nav-icon">⌘</span><span>Dashboard</span></li>
-            <li class="nav-item" data-page="jobs"><span class="nav-icon">▤</span><span>Applications</span></li>
-            <li class="nav-item" data-page="add-job"><span class="nav-icon">+</span><span>Add Job</span></li>
-            <li class="nav-item" data-page="ats"><span class="nav-icon">◎</span><span>ATS Analyzer</span></li>
-        </ul>
-        <div class="sidebar-footer">
-            <div class="api-status"><span class="status-dot"></span><span>API Connected</span></div>
-        </div>
-    </nav>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">📋</div>
+                <h1>JobTrack</h1>
+            </div>
 
-    <main class="main-content">
-        <!-- Dashboard Page -->
-        <section id="page-dashboard" class="page active">
-            <header class="page-header">
-                <div>
-                    <h1>Dashboard</h1>
-                    <p class="subtitle">Your job search at a glance</p>
+            <nav class="nav-section">
+                <div class="nav-label">Main</div>
+                <div class="nav-item active" data-page="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Dashboard
                 </div>
-                <div class="header-actions">
-                    <button class="btn btn-primary" onclick="showPage('add-job')"><span>+</span> Add Application</button>
+                <div class="nav-item" data-page="jobs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Jobs
                 </div>
-            </header>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-icon blue">▤</div><div class="stat-info"><span class="stat-value" id="stat-total">0</span><span class="stat-label">Total Applications</span></div></div>
-                <div class="stat-card"><div class="stat-icon yellow">★</div><div class="stat-info"><span class="stat-value" id="stat-wishlist">0</span><span class="stat-label">Wishlist</span></div></div>
-                <div class="stat-card"><div class="stat-icon green">→</div><div class="stat-info"><span class="stat-value" id="stat-applied">0</span><span class="stat-label">Applied</span></div></div>
-                <div class="stat-card"><div class="stat-icon purple">◐</div><div class="stat-info"><span class="stat-value" id="stat-interviewing">0</span><span class="stat-label">Interviewing</span></div></div>
-                <div class="stat-card"><div class="stat-icon emerald">✓</div><div class="stat-info"><span class="stat-value" id="stat-offer">0</span><span class="stat-label">Offers</span></div></div>
-            </div>
-            <div class="charts-grid">
-                <div class="chart-card"><h3>Applications by Status</h3><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
-                <div class="chart-card"><h3>Activity (Last 30 Days)</h3><div class="chart-container"><canvas id="activityChart"></canvas></div></div>
-            </div>
-            <div class="recent-section">
-                <div class="section-header"><h3>Recent Applications</h3><button class="btn btn-secondary" onclick="showPage('jobs')">View All</button></div>
-                <div class="jobs-list" id="recent-jobs"></div>
-            </div>
-        </section>
+            </nav>
 
-        <!-- Jobs List Page -->
-        <section id="page-jobs" class="page">
-            <header class="page-header">
-                <div><h1>Applications</h1><p class="subtitle">Track all your job applications</p></div>
-                <div class="header-actions">
-                    <select id="filter-status" class="filter-select" onchange="filterJobs()">
-                        <option value="">All Status</option>
-                        <option value="wishlist">Wishlist</option>
-                        <option value="applied">Applied</option>
-                        <option value="interviewing">Interviewing</option>
-                        <option value="offer">Offer</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="showPage('add-job')"><span>+</span> Add Application</button>
+            <nav class="nav-section">
+                <div class="nav-label">AI Tools</div>
+                <div class="nav-item" data-page="ats">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    ATS Analyzer
                 </div>
-            </header>
-            <div class="jobs-table-container">
-                <table class="jobs-table">
-                    <thead><tr><th>Company</th><th>Position</th><th>Location</th><th>Salary Range</th><th>Status</th><th>Date Added</th><th>Actions</th></tr></thead>
-                    <tbody id="jobs-table-body"></tbody>
-                </table>
-            </div>
-        </section>
+                <div class="nav-item" data-page="cover-letter">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Cover Letter
+                </div>
+            </nav>
 
-        <!-- Add Job Page -->
-        <section id="page-add-job" class="page">
-            <header class="page-header">
-                <div><h1>Add Application</h1><p class="subtitle">Add a job from URL or paste the description</p></div>
-            </header>
-            <div class="add-job-container">
-                <div class="form-section" id="step-paste">
-                    <div class="section-header"><span class="step-number">1</span><h3>Enter Job Information</h3></div>
-                    
-                    <div class="input-option">
-                        <label>Option A: Paste Job URL</label>
-                        <p class="input-hint">Works with Greenhouse, Lever, Indeed, company career pages. LinkedIn blocks automated access.</p>
-                        <div class="url-input-group">
-                            <input type="url" id="job-url-input" class="url-input" placeholder="https://jobs.lever.co/company/position...">
-                            <button class="btn btn-secondary" onclick="extractFromURL()">Extract from URL</button>
-                        </div>
+            <nav class="nav-section">
+                <div class="nav-label">Data</div>
+                <div class="nav-item" data-page="resumes">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Resumes
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section id="dashboard" class="page-section active">
+                <div class="page-header">
+                    <h2 class="page-title">Dashboard</h2>
+                    <p class="page-subtitle">Track your job search progress at a glance</p>
+                </div>
+
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card wishlist">
+                        <div class="stat-label">Wishlist</div>
+                        <div class="stat-value" id="stat-wishlist">-</div>
                     </div>
-                    
-                    <div class="option-divider"><span>OR</span></div>
-                    
-                    <div class="input-option">
-                        <label>Option B: Paste Job Description</label>
-                        <textarea id="job-description-input" class="job-description-textarea" placeholder="Paste the full job description here..."></textarea>
-                        <div class="form-actions">
-                            <button class="btn btn-primary btn-large" onclick="extractJobDetails()"><span class="btn-icon">◎</span> Extract Details with AI</button>
-                        </div>
+                    <div class="stat-card applied">
+                        <div class="stat-label">Applied</div>
+                        <div class="stat-value" id="stat-applied">-</div>
+                    </div>
+                    <div class="stat-card interviewing">
+                        <div class="stat-label">Interviewing</div>
+                        <div class="stat-value" id="stat-interviewing">-</div>
+                    </div>
+                    <div class="stat-card offer">
+                        <div class="stat-label">Offers</div>
+                        <div class="stat-value" id="stat-offer">-</div>
+                    </div>
+                    <div class="stat-card rejected">
+                        <div class="stat-label">Rejected</div>
+                        <div class="stat-value" id="stat-rejected">-</div>
                     </div>
                 </div>
 
-                <div class="form-section hidden" id="step-review">
-                    <div class="section-header"><span class="step-number">2</span><h3>Review & Edit Details</h3></div>
-                    <form id="job-form" class="job-form">
-                        <div class="form-row">
-                            <div class="form-group"><label for="company">Company *</label><input type="text" id="company" name="company" required></div>
-                            <div class="form-group"><label for="position">Position *</label><input type="text" id="position" name="position" required></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Applications</h3>
+                        <button class="btn btn-primary btn-sm" onclick="showAddJobModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Job
+                        </button>
+                    </div>
+                    <div id="recent-jobs">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jobs Page -->
+            <section id="jobs" class="page-section">
+                <div class="page-header">
+                    <h2 class="page-title">Job Applications</h2>
+                    <p class="page-subtitle">Manage all your job applications in one place</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="tabs" id="status-tabs">
+                            <div class="tab active" data-status="all">All</div>
+                            <div class="tab" data-status="wishlist">Wishlist</div>
+                            <div class="tab" data-status="applied">Applied</div>
+                            <div class="tab" data-status="interviewing">Interviewing</div>
+                            <div class="tab" data-status="offer">Offers</div>
+                            <div class="tab" data-status="rejected">Rejected</div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group"><label for="location">Location</label><input type="text" id="location" name="location"></div>
-                            <div class="form-group"><label for="job_url">Job URL</label><input type="url" id="job_url" name="job_url" placeholder="https://..."></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label for="salary_min">Min Salary ($)</label><input type="number" id="salary_min" name="salary_min" placeholder="100000"></div>
-                            <div class="form-group"><label for="salary_max">Max Salary ($)</label><input type="number" id="salary_max" name="salary_max" placeholder="150000"></div>
-                        </div>
-                        <div class="form-row">
+                        <button class="btn btn-primary" onclick="showAddJobModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Job
+                        </button>
+                    </div>
+                    <div id="jobs-list">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ATS Analyzer Page -->
+            <section id="ats" class="page-section">
+                <div class="page-header">
+                    <h2 class="page-title">ATS Resume Analyzer</h2>
+                    <p class="page-subtitle">Check how well your resume matches a job description</p>
+                </div>
+
+                <div class="ats-layout">
+                    <div>
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Input</h3>
                             <div class="form-group">
-                                <label for="status">Status</label>
-                                <select id="status" name="status">
-                                    <option value="wishlist">Wishlist</option>
-                                    <option value="applied">Applied</option>
-                                    <option value="interviewing">Interviewing</option>
-                                    <option value="offer">Offer</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
+                                <label class="form-label">Your Resume</label>
+                                <textarea class="form-textarea" id="ats-resume" rows="8" placeholder="Paste your resume text here..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Job Description</label>
+                                <textarea class="form-textarea" id="ats-job-desc" rows="8" placeholder="Paste the job description here..."></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="analyzeATS()" id="analyze-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Analyze Match
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="ats-results" style="display: none;">
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">ATS Score</h3>
+                            <div class="ats-score-container">
+                                <div class="ats-score-circle">
+                                    <svg width="200" height="200">
+                                        <circle class="ats-score-bg" cx="100" cy="100" r="90"></circle>
+                                        <circle class="ats-score-fill" id="score-circle" cx="100" cy="100" r="90"></circle>
+                                    </svg>
+                                    <div class="ats-score-text">
+                                        <div class="ats-score-value" id="ats-score-value">0</div>
+                                        <div class="ats-score-label">ATS Score</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group full-width"><label for="notes">Notes</label><textarea id="notes" name="notes" rows="3" placeholder="Any additional notes..."></textarea></div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="resetAddJob()">Start Over</button>
-                            <button type="submit" class="btn btn-primary btn-large"><span class="btn-icon">✓</span> Save Application</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
 
-        <!-- ATS Analyzer Page -->
-        <section id="page-ats" class="page">
-            <header class="page-header">
-                <div><h1>ATS Analyzer</h1><p class="subtitle">Optimize your resume for any job posting</p></div>
-            </header>
-            <div class="ats-container">
-                <div class="ats-input-section">
-                    <div class="form-group">
-                        <label for="resume-text">Your Resume</label>
-                        <textarea id="resume-text" class="resume-textarea" placeholder="Paste your resume text here..."></textarea>
+                        <div class="card">
+                            <h3 class="card-title">Missing Keywords</h3>
+                            <div class="keywords-container" id="missing-keywords"></div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 16px;">Suggestions</h3>
+                            <ul class="suggestions-list" id="suggestions-list"></ul>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="job-desc-ats">Job Description</label>
-                        <div class="saved-jobs-section" id="saved-jobs-section">
-                            <div class="saved-jobs-header">
-                                <span>Load from saved jobs:</span>
-                                <select id="saved-job-select" class="filter-select" onchange="loadSavedJobDescription()">
-                                    <option value="">-- Select a saved job --</option>
-                                </select>
+                </div>
+            </section>
+
+            <!-- Cover Letter Page -->
+            <section id="cover-letter" class="page-section">
+                <div class="page-header">
+                    <h2 class="page-title">Cover Letter Generator</h2>
+                    <p class="page-subtitle">Generate personalized cover letters with AI</p>
+                </div>
+
+                <div class="ats-layout">
+                    <div>
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Details</h3>
+                            <div class="form-group">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" class="form-input" id="cl-company" placeholder="e.g., Tesla">
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Your Resume</label>
+                                <textarea class="form-textarea" id="cl-resume" rows="6" placeholder="Paste your resume text here..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Job Description</label>
+                                <textarea class="form-textarea" id="cl-job-desc" rows="6" placeholder="Paste the job description here..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tone</label>
+                                <div class="tone-options">
+                                    <div class="tone-option selected" data-tone="professional">
+                                        <h4>Professional</h4>
+                                        <p>Formal and polished</p>
+                                    </div>
+                                    <div class="tone-option" data-tone="enthusiastic">
+                                        <h4>Enthusiastic</h4>
+                                        <p>Energetic and eager</p>
+                                    </div>
+                                    <div class="tone-option" data-tone="conversational">
+                                        <h4>Conversational</h4>
+                                        <p>Friendly and approachable</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="generateCoverLetter()" id="generate-cl-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Generate Cover Letter
+                            </button>
                         </div>
-                        <textarea id="job-desc-ats" class="resume-textarea" placeholder="Paste the job description or select from saved jobs above..."></textarea>
                     </div>
-                    
-                    <div class="form-actions">
-                        <button class="btn btn-primary btn-large" onclick="analyzeATS()"><span class="btn-icon">◎</span> Analyze Resume</button>
+
+                    <div id="cl-results" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Generated Cover Letter</h3>
+                                <button class="btn btn-secondary btn-sm" onclick="copyCoverLetter()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <div class="cover-letter-preview" id="cl-preview"></div>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="ats-results-section hidden" id="ats-results">
-                    <div class="ats-score-card">
-                        <div class="score-circle"><span class="score-value" id="ats-score-value">0</span><span class="score-label">ATS Score</span></div>
+            <!-- Resumes Page -->
+            <section id="resumes" class="page-section">
+                <div class="page-header">
+                    <h2 class="page-title">My Resumes</h2>
+                    <p class="page-subtitle">Manage your resume versions and track ATS scores</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Saved Resumes</h3>
+                        <button class="btn btn-primary" onclick="showAddResumeModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Resume
+                        </button>
                     </div>
-                    <div class="ats-details-card"><h4>Missing Keywords</h4><div class="keywords-list" id="missing-keywords"></div></div>
-                    <div class="ats-details-card"><h4>Suggestions</h4><ul class="suggestions-list" id="suggestions-list"></ul></div>
-                    <div class="ats-details-card"><h4>Summary</h4><p id="ats-summary"></p></div>
-                    <div class="cover-letter-section">
-                        <h4>Generate Cover Letter</h4>
-                        <div class="form-row">
-                            <div class="form-group"><label for="company-name-cl">Company Name</label><input type="text" id="company-name-cl" placeholder="e.g., Google"></div>
-                            <div class="form-group"><label for="tone-cl">Tone</label><select id="tone-cl"><option value="professional">Professional</option><option value="enthusiastic">Enthusiastic</option><option value="conversational">Conversational</option></select></div>
-                        </div>
-                        <button class="btn btn-secondary btn-large" onclick="generateCoverLetter()"><span class="btn-icon">✎</span> Generate Cover Letter</button>
-                        <div class="cover-letter-output hidden" id="cover-letter-output">
-                            <h4>Your Cover Letter</h4>
-                            <div class="cover-letter-text" id="cover-letter-text"></div>
-                            <button class="btn btn-secondary" onclick="copyCoverLetter()">Copy to Clipboard</button>
-                        </div>
+                    <div id="resumes-list">
+                        <div class="loading"><div class="spinner"></div></div>
                     </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Job Modal -->
+    <div class="modal-overlay" id="job-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="job-modal-title">Add New Job</h3>
+                <button class="modal-close" onclick="closeModal('job-modal')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="job-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Company *</label>
+                        <input type="text" class="form-input" id="job-company" placeholder="e.g., Google">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Position *</label>
+                        <input type="text" class="form-input" id="job-position" placeholder="e.g., Product Manager">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-input" id="job-location" placeholder="e.g., San Francisco, CA">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="job-status">
+                            <option value="wishlist">Wishlist</option>
+                            <option value="applied">Applied</option>
+                            <option value="interviewing">Interviewing</option>
+                            <option value="offer">Offer</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Salary Min ($)</label>
+                        <input type="number" class="form-input" id="job-salary-min" placeholder="80000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Salary Max ($)</label>
+                        <input type="number" class="form-input" id="job-salary-max" placeholder="120000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Job URL</label>
+                    <input type="url" class="form-input" id="job-url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="job-notes" rows="3" placeholder="Any additional notes..."></textarea>
                 </div>
             </div>
-        </section>
-
-        <!-- Job Modal -->
-        <div class="modal hidden" id="job-modal">
-            <div class="modal-backdrop" onclick="closeModal()"></div>
-            <div class="modal-content">
-                <div class="modal-header"><h2 id="modal-title">Job Details</h2><button class="modal-close" onclick="closeModal()">×</button></div>
-                <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('job-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveJob()" id="save-job-btn">Save Job</button>
             </div>
         </div>
-    </main>
+    </div>
 
-    <div class="loading-overlay hidden" id="loading"><div class="loading-spinner"></div><p>Processing with AI...</p></div>
+    <!-- Add Resume Modal -->
+    <div class="modal-overlay" id="resume-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Resume</h3>
+                <button class="modal-close" onclick="closeModal('resume-modal')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Resume Name *</label>
+                    <input type="text" class="form-input" id="resume-filename" placeholder="e.g., Software Engineer Resume v2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">File Path</label>
+                    <input type="text" class="form-input" id="resume-filepath" placeholder="e.g., /resumes/my_resume.pdf">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="resume-notes" rows="3" placeholder="Notes about this resume version..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('resume-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveResume()">Save Resume</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
-    <script src="app.js"></script>
+
+    <script>
+        // API Base URL - change this if your backend runs on a different port
+        const API_URL = 'http://localhost:8000';
+
+        // Current state
+        let currentFilter = 'all';
+        let selectedTone = 'professional';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavigation();
+            initTabs();
+            initToneSelector();
+            loadDashboard();
+        });
+
+        // Navigation
+        function initNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    navigateTo(page);
+                });
+            });
+        }
+
+        function navigateTo(page) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.toggle('active', section.id === page);
+            });
+            switch(page) {
+                case 'dashboard': loadDashboard(); break;
+                case 'jobs': loadJobs(); break;
+                case 'resumes': loadResumes(); break;
+            }
+        }
+
+        // Tabs
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.dataset.status;
+                    loadJobs();
+                });
+            });
+        }
+
+        // Tone Selector
+        function initToneSelector() {
+            document.querySelectorAll('.tone-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.tone-option').forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                    selectedTone = option.dataset.tone;
+                });
+            });
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/api/stats`);
+                const stats = await response.json();
+                document.getElementById('stat-wishlist').textContent = stats.by_status?.wishlist || 0;
+                document.getElementById('stat-applied').textContent = stats.by_status?.applied || 0;
+                document.getElementById('stat-interviewing').textContent = stats.by_status?.interviewing || 0;
+                document.getElementById('stat-offer').textContent = stats.by_status?.offer || 0;
+                document.getElementById('stat-rejected').textContent = stats.by_status?.rejected || 0;
+                loadRecentJobs();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showToast('Failed to load dashboard data', 'error');
+            }
+        }
+
+        async function loadRecentJobs() {
+            try {
+                const response = await fetch(`${API_URL}/api/jobs`);
+                const jobs = await response.json();
+                const container = document.getElementById('recent-jobs');
+                if (jobs.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg><h3>No jobs yet</h3><p>Start tracking your job applications</p></div>`;
+                    return;
+                }
+                container.innerHTML = renderJobsTable(jobs.slice(0, 5));
+            } catch (error) {
+                console.error('Error loading recent jobs:', error);
+                document.getElementById('recent-jobs').innerHTML = '<p style="color: var(--danger);">Failed to load jobs</p>';
+            }
+        }
+
+        // Jobs
+        async function loadJobs() {
+            try {
+                let url = `${API_URL}/api/jobs`;
+                if (currentFilter !== 'all') url += `?status=${currentFilter}`;
+                const response = await fetch(url);
+                const jobs = await response.json();
+                const container = document.getElementById('jobs-list');
+                if (jobs.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg><h3>No jobs found</h3><p>${currentFilter === 'all' ? 'Start tracking your job applications' : 'No jobs with this status'}</p></div>`;
+                    return;
+                }
+                container.innerHTML = renderJobsTable(jobs);
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                document.getElementById('jobs-list').innerHTML = '<p style="color: var(--danger);">Failed to load jobs. Make sure the API server is running.</p>';
+            }
+        }
+
+        function renderJobsTable(jobs) {
+            return `<table class="jobs-table"><thead><tr><th>Company</th><th>Location</th><th>Salary</th><th>Status</th><th>Date Added</th><th></th></tr></thead><tbody>${jobs.map(job => `<tr><td><div class="company-cell"><div class="company-avatar">${job.company.charAt(0).toUpperCase()}</div><div class="company-info"><h4>${escapeHtml(job.company)}</h4><span>${escapeHtml(job.position)}</span></div></div></td><td>${escapeHtml(job.location || '-')}</td><td>${formatSalary(job.salary_min, job.salary_max)}</td><td><span class="status-badge status-${job.status}">${job.status}</span></td><td>${job.date_added || '-'}</td><td class="actions-cell"><button class="btn btn-secondary btn-sm" onclick="editJob(${job.id})" style="margin-right: 8px;">Edit</button><button class="btn btn-secondary btn-sm" onclick="deleteJob(${job.id})" style="color: var(--danger);">Delete</button></td></tr>`).join('')}</tbody></table>`;
+        }
+
+        function formatSalary(min, max) {
+            if (!min && !max) return '-';
+            if (min && max) return `$${(min/1000).toFixed(0)}k - $${(max/1000).toFixed(0)}k`;
+            if (min) return `$${(min/1000).toFixed(0)}k+`;
+            return `Up to $${(max/1000).toFixed(0)}k`;
+        }
+
+        // Job CRUD
+        function showAddJobModal() {
+            document.getElementById('job-modal-title').textContent = 'Add New Job';
+            document.getElementById('job-id').value = '';
+            document.getElementById('job-company').value = '';
+            document.getElementById('job-position').value = '';
+            document.getElementById('job-location').value = '';
+            document.getElementById('job-status').value = 'wishlist';
+            document.getElementById('job-salary-min').value = '';
+            document.getElementById('job-salary-max').value = '';
+            document.getElementById('job-url').value = '';
+            document.getElementById('job-notes').value = '';
+            openModal('job-modal');
+        }
+
+        async function editJob(jobId) {
+            try {
+                const response = await fetch(`${API_URL}/api/jobs/${jobId}`);
+                const job = await response.json();
+                document.getElementById('job-modal-title').textContent = 'Edit Job';
+                document.getElementById('job-id').value = job.id;
+                document.getElementById('job-company').value = job.company || '';
+                document.getElementById('job-position').value = job.position || '';
+                document.getElementById('job-location').value = job.location || '';
+                document.getElementById('job-status').value = job.status || 'wishlist';
+                document.getElementById('job-salary-min').value = job.salary_min || '';
+                document.getElementById('job-salary-max').value = job.salary_max || '';
+                document.getElementById('job-url').value = job.job_url || '';
+                document.getElementById('job-notes').value = job.notes || '';
+                openModal('job-modal');
+            } catch (error) {
+                console.error('Error loading job:', error);
+                showToast('Failed to load job details', 'error');
+            }
+        }
+
+        async function saveJob() {
+            const jobId = document.getElementById('job-id').value;
+            const company = document.getElementById('job-company').value.trim();
+            const position = document.getElementById('job-position').value.trim();
+            if (!company || !position) {
+                showToast('Company and Position are required', 'error');
+                return;
+            }
+            const jobData = {
+                company,
+                position,
+                location: document.getElementById('job-location').value.trim() || null,
+                status: document.getElementById('job-status').value,
+                salary_min: parseInt(document.getElementById('job-salary-min').value) || null,
+                salary_max: parseInt(document.getElementById('job-salary-max').value) || null,
+                job_url: document.getElementById('job-url').value.trim() || null,
+                notes: document.getElementById('job-notes').value.trim() || null
+            };
+            try {
+                const url = jobId ? `${API_URL}/api/jobs/${jobId}` : `${API_URL}/api/jobs`;
+                const method = jobId ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(jobData)
+                });
+                if (!response.ok) throw new Error('Failed to save job');
+                closeModal('job-modal');
+                showToast(jobId ? 'Job updated successfully' : 'Job added successfully', 'success');
+                loadDashboard();
+                loadJobs();
+            } catch (error) {
+                console.error('Error saving job:', error);
+                showToast('Failed to save job', 'error');
+            }
+        }
+
+        async function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this job?')) return;
+            try {
+                const response = await fetch(`${API_URL}/api/jobs/${jobId}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Failed to delete job');
+                showToast('Job deleted successfully', 'success');
+                loadDashboard();
+                loadJobs();
+            } catch (error) {
+                console.error('Error deleting job:', error);
+                showToast('Failed to delete job', 'error');
+            }
+        }
+
+        // Resumes
+        async function loadResumes() {
+            try {
+                const response = await fetch(`${API_URL}/api/resumes`);
+                const resumes = await response.json();
+                const container = document.getElementById('resumes-list');
+                if (resumes.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><h3>No resumes yet</h3><p>Add your resume versions to track them</p></div>`;
+                    return;
+                }
+                container.innerHTML = `<table class="jobs-table"><thead><tr><th>Name</th><th>File Path</th><th>ATS Score</th><th>Upload Date</th></tr></thead><tbody>${resumes.map(resume => `<tr><td><strong>${escapeHtml(resume.filename)}</strong></td><td>${escapeHtml(resume.file_path || '-')}</td><td>${resume.ats_score ? `<span class="status-badge status-applied">${resume.ats_score}/100</span>` : '-'}</td><td>${resume.upload_date || '-'}</td></tr>`).join('')}</tbody></table>`;
+            } catch (error) {
+                console.error('Error loading resumes:', error);
+                document.getElementById('resumes-list').innerHTML = '<p style="color: var(--danger);">Failed to load resumes</p>';
+            }
+        }
+
+        function showAddResumeModal() {
+            document.getElementById('resume-filename').value = '';
+            document.getElementById('resume-filepath').value = '';
+            document.getElementById('resume-notes').value = '';
+            openModal('resume-modal');
+        }
+
+        async function saveResume() {
+            const filename = document.getElementById('resume-filename').value.trim();
+            const filepath = document.getElementById('resume-filepath').value.trim();
+            if (!filename) {
+                showToast('Resume name is required', 'error');
+                return;
+            }
+            const resumeData = {
+                filename,
+                file_path: filepath || '/resumes/' + filename.toLowerCase().replace(/\s+/g, '_') + '.pdf',
+                notes: document.getElementById('resume-notes').value.trim() || null
+            };
+            try {
+                const response = await fetch(`${API_URL}/api/resumes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(resumeData)
+                });
+                if (!response.ok) throw new Error('Failed to save resume');
+                closeModal('resume-modal');
+                showToast('Resume added successfully', 'success');
+                loadResumes();
+            } catch (error) {
+                console.error('Error saving resume:', error);
+                showToast('Failed to save resume', 'error');
+            }
+        }
+
+        // ATS Analysis
+        async function analyzeATS() {
+            const resume = document.getElementById('ats-resume').value.trim();
+            const jobDesc = document.getElementById('ats-job-desc').value.trim();
+            if (!resume || !jobDesc) {
+                showToast('Please enter both resume and job description', 'error');
+                return;
+            }
+            const btn = document.getElementById('analyze-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div> Analyzing...';
+            try {
+                const response = await fetch(`${API_URL}/api/analyze-ats`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resume_text: resume, job_description: jobDesc })
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Analysis failed');
+                document.getElementById('ats-results').style.display = 'block';
+                const score = result.score;
+                const scoreCircle = document.getElementById('score-circle');
+                const circumference = 2 * Math.PI * 90;
+                const offset = circumference - (score / 100) * circumference;
+                scoreCircle.style.strokeDashoffset = offset;
+                if (score >= 80) scoreCircle.style.stroke = 'var(--success)';
+                else if (score >= 60) scoreCircle.style.stroke = 'var(--warning)';
+                else scoreCircle.style.stroke = 'var(--danger)';
+                document.getElementById('ats-score-value').textContent = score;
+                document.getElementById('missing-keywords').innerHTML = result.missing_keywords.map(kw => `<span class="keyword-tag">${escapeHtml(kw)}</span>`).join('');
+                document.getElementById('suggestions-list').innerHTML = result.suggestions.map(suggestion => `<li><span class="suggestion-icon">💡</span><span>${escapeHtml(suggestion)}</span></li>`).join('');
+                showToast('Analysis complete!', 'success');
+            } catch (error) {
+                console.error('Error analyzing:', error);
+                showToast('Failed to analyze. Make sure the API server is running.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg> Analyze Match`;
+            }
+        }
+
+        // Cover Letter Generator
+        async function generateCoverLetter() {
+            const company = document.getElementById('cl-company').value.trim();
+            const resume = document.getElementById('cl-resume').value.trim();
+            const jobDesc = document.getElementById('cl-job-desc').value.trim();
+            if (!company || !resume || !jobDesc) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            const btn = document.getElementById('generate-cl-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div> Generating...';
+            try {
+                const response = await fetch(`${API_URL}/api/generate-cover-letter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resume_text: resume, job_description: jobDesc, company_name: company, tone: selectedTone })
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Generation failed');
+                document.getElementById('cl-results').style.display = 'block';
+                document.getElementById('cl-preview').textContent = result.cover_letter;
+                showToast('Cover letter generated!', 'success');
+            } catch (error) {
+                console.error('Error generating:', error);
+                showToast('Failed to generate. Make sure the API server is running.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> Generate Cover Letter`;
+            }
+        }
+
+        function copyCoverLetter() {
+            const text = document.getElementById('cl-preview').textContent;
+            navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success')).catch(() => showToast('Failed to copy', 'error'));
+        }
+
+        // Modal helpers
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        // Utility
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(modal => modal.classList.remove('active'));
+        });
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+    </script>
 </body>
 </html>
