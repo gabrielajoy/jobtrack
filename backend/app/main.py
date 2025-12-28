@@ -8,50 +8,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import sqlite3
 from contextlib import contextmanager
+import json
 
 from .database import db
 from .models import (
-    Job, JobCreate, JobUpdate, 
-    Resume, ResumeCreate, ResumeUpdate
+    Job, JobCreate, JobUpdate,
     Resume, ResumeCreate, ResumeUpdate,
     ATSAnalysisRequest, ATSAnalysisResponse,
     CoverLetterRequest, CoverLetterResponse,
     JobExtractRequest, JobExtractFromURLRequest, JobExtractResponse
 )
 from .ats_service import (
-    analyze_resume_ats, 
+    analyze_resume_ats,
     generate_cover_letter,
     extract_job_details,
     fetch_and_extract_from_url
 )
-
-from typing import List, Optional  # Add Optional!
-from pydantic import BaseModel
-
-# ... other imports ...
-
-# ATS Models (define here in main.py)
-class ATSAnalysisRequest(BaseModel):
-    resume_text: str
-    job_description: str
-    resume_id: Optional[int] = None
-
-class ATSAnalysisResponse(BaseModel):
-    success: bool
-    score: int
-    missing_keywords: List[str]
-    suggestions: List[str]
-    summary: str
-
-class CoverLetterRequest(BaseModel):
-    resume_text: str
-    job_description: str
-    company_name: str
-    tone: str = "professional"
-
-class CoverLetterResponse(BaseModel):
-    success: bool
-    cover_letter: str
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -116,9 +88,10 @@ def get_jobs(status: str = None):
         jobs = cursor.fetchall()
         return [dict(job) for job in jobs]
 
+
 @app.get("/api/jobs/with-descriptions")
 def get_jobs_with_descriptions():
-    """Get all jobs that have job descriptions saved (for ATS analyzer dropdown)"""
+    """Get all jobs that have job descriptions saved"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -129,6 +102,7 @@ def get_jobs_with_descriptions():
         """)
         jobs = cursor.fetchall()
         return [dict(job) for job in jobs]
+
 
 @app.post("/api/jobs", response_model=Job, status_code=201)
 def create_job(job: JobCreate):
@@ -317,36 +291,13 @@ def update_resume(resume_id: int, resume_update: ResumeUpdate):
         updated_resume = cursor.fetchone()
         
         return dict(updated_resume)
-# Add this import at the top
-from .ats_service import analyze_resume_ats, generate_cover_letter
-
-# Add these models after your other Pydantic models
-class ATSAnalysisRequest(BaseModel):
-    """Request for ATS analysis"""
-    resume_text: str
-    job_description: str
-    resume_id: Optional[int] = None
-
-
-class CoverLetterRequest(BaseModel):
-    """Request for cover letter generation"""
-    resume_text: str
-    job_description: str
-    company_name: str
-    tone: str = "professional"
-
 
 
 # ==================== ATS ANALYSIS ENDPOINTS ====================
 
-# Add these endpoints with your resume endpoints
-@app.post("/api/analyze-ats")
+@app.post("/api/analyze-ats", response_model=ATSAnalysisResponse)
 def analyze_ats(request: ATSAnalysisRequest):
-    """
-    Analyze resume against job description for ATS compatibility
-    
-    Returns score, missing keywords, and improvement suggestions
-    """
+    """Analyze resume against job description for ATS compatibility"""
     try:
         result = analyze_resume_ats(
             resume_text=request.resume_text,
@@ -357,41 +308,23 @@ def analyze_ats(request: ATSAnalysisRequest):
         if request.resume_id:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                
-                # Store analysis as JSON string
-                import json
                 analysis_json = json.dumps(result)
-                
                 cursor.execute("""
                     UPDATE resumes 
                     SET ats_score = ?, ats_analysis = ?
                     WHERE id = ?
                 """, (result['score'], analysis_json, request.resume_id))
-                
                 conn.commit()
         
-        return {
-            "success": True,
-            **result
-        }
+        return {"success": True, **result}
         
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"ATS analysis failed: {str(e)}"
-        )
-    """Analyze a resume against a job description for ATS compatibility"""
-    result = analyze_resume_ats(request.resume_text, request.job_description)
-    return result
+        raise HTTPException(status_code=500, detail=f"ATS analysis failed: {str(e)}")
 
 
-@app.post("/api/generate-cover-letter")
+@app.post("/api/generate-cover-letter", response_model=CoverLetterResponse)
 def create_cover_letter(request: CoverLetterRequest):
-    """
-    Generate a personalized cover letter using AI
-    
-    Creates a tailored cover letter based on resume and job description
-    """
+    """Generate a personalized cover letter using AI"""
     try:
         cover_letter = generate_cover_letter(
             resume_text=request.resume_text,
@@ -400,24 +333,10 @@ def create_cover_letter(request: CoverLetterRequest):
             tone=request.tone
         )
         
-        return {
-            "success": True,
-            "cover_letter": cover_letter
-        }
+        return {"success": True, "cover_letter": cover_letter}
         
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Cover letter generation failed: {str(e)}"
-        )        
-    """Generate a personalized cover letter"""
-    cover_letter = generate_cover_letter(
-        resume_text=request.resume_text,
-        job_description=request.job_description,
-        company_name=request.company_name,
-        tone=request.tone
-    )
-    return {"cover_letter": cover_letter}
+        raise HTTPException(status_code=500, detail=f"Cover letter generation failed: {str(e)}")
 
 
 # ==================== JOB EXTRACTION ENDPOINTS ====================
@@ -431,12 +350,7 @@ def extract_job(request: JobExtractRequest):
 
 @app.post("/api/ats/extract-from-url")
 def extract_from_url(request: JobExtractFromURLRequest):
-    """
-    Fetch a job posting from URL and extract details.
-    
-    Note: Won't work with LinkedIn (blocks scraping).
-    Works with: Greenhouse, Lever, Indeed, company career pages.
-    """
+    """Fetch a job posting from URL and extract details"""
     result = fetch_and_extract_from_url(request.url)
     
     if "error" in result:
