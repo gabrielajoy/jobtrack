@@ -6,7 +6,7 @@ Main entry point for the API
 import json
 import os
 import uuid
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -59,10 +59,12 @@ def get_db_connection():
         conn.close()
 
 
-@app.on_event("startup")
-def startup():
-    """Initialize database on app startup"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     db.initialize_schema()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/api")
