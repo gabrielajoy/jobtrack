@@ -6,7 +6,6 @@ Main entry point for the API
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
-import sqlite3
 from contextlib import contextmanager
 import json
 
@@ -45,8 +44,7 @@ app.add_middleware(
 @contextmanager
 def get_db_connection():
     """Context manager for database connections"""
-    conn = sqlite3.connect(db.db_path)
-    conn.row_factory = sqlite3.Row
+    conn = db.connect()
     try:
         yield conn
     finally:

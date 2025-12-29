@@ -3,13 +3,13 @@ ATS Analysis Service
 Uses Claude API to analyze resumes against job descriptions
 """
 
-import os
 import json
-import re
-from dotenv import load_dotenv
-load_dotenv()
 
+from dotenv import load_dotenv
 from anthropic import Anthropic
+
+# Load environment variables
+load_dotenv()
 
 # Initialize the client
 client = Anthropic()
@@ -279,3 +279,4 @@ Extract and respond in this exact JSON format (no markdown, just pure JSON):
         return {
             "error": f"Failed to fetch URL: {str(e)}"
         }
+    
