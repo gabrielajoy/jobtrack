@@ -3,14 +3,15 @@ JobTrack FastAPI Application
 Main entry point for the API
 """
 
+from contextlib import contextmanager, asynccontextmanager
 import json
 import os
 import uuid
-from contextlib import contextmanager
 from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from .database import db
 from .models import (
@@ -32,11 +33,19 @@ from .file_service import parse_resume_file
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "resumes")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code here
+    db.initialize_schema()
+    yield
+    # Shutdown code here
+
 # Initialize FastAPI app
 app = FastAPI(
     title="JobTrack API",
     description="API for tracking job applications with AI-powered features",
-    version="1.1.0"
+    version="1.1.0",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -58,14 +67,7 @@ def get_db_connection():
     finally:
         conn.close()
 
-
-@app.on_event("startup")
-def startup():
-    """Initialize database on app startup"""
-    db.initialize_schema()
-
-
-@app.get("/")
+@app.get("/api")
 def root():
     """Health check endpoint"""
     return {
@@ -443,9 +445,6 @@ def extract_from_url(request: JobExtractFromURLRequest):
 
 
 # ==================== FRONTEND SERVING ====================
-
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 # Serve frontend at root
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
