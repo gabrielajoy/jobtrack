@@ -11,6 +11,7 @@ from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from .database import db
 from .models import (
@@ -444,8 +445,6 @@ def extract_from_url(request: JobExtractFromURLRequest):
 
 
 # ==================== FRONTEND SERVING ====================
-
-from fastapi.responses import FileResponse
 
 # Serve frontend at root
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
