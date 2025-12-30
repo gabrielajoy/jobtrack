@@ -1,6 +1,10 @@
 # 💼 JobTrack
 
-An AI-powered job application tracker to help manage your job search.
+**Your AI-powered job application tracker**
+
+Track job applications, analyze your resume against job descriptions, and generate tailored cover letters - all in one place.
+
+---
 
 ## ✨ Features
 
@@ -17,6 +21,92 @@ An AI-powered job application tracker to help manage your job search.
 ```
 Double-click start.bat
 ```
+### Run on Your Computer
+
+#### What You'll Need
+
+1. **Python** (version 3.9 or newer)
+   - Download from: https://www.python.org/downloads/
+   - ⚠️ During installation, check ✅ **"Add Python to PATH"**
+
+2. **Anthropic API Key** (for AI features)
+   - Sign up at: https://console.anthropic.com/
+   - Create an API key (they offer free credits to start)
+
+#### Step-by-Step Setup
+
+**Windows:**
+1. Download this project (green "Code" button → "Download ZIP")
+2. Extract the ZIP file to a folder
+3. Double-click `start.bat`
+4. Enter your API key when asked (first time only)
+5. Open http://localhost:8000 in your browser
+
+**Mac/Linux:**
+1. Download this project
+2. Open Terminal in the project folder
+3. Run: `chmod +x start.sh && ./start.sh`
+4. Enter your API key when asked (first time only)
+5. Open http://localhost:8000 in your browser
+
+---
+
+## 📖 How to Use
+
+### Adding Jobs
+
+1. Click **"Jobs"** in the sidebar
+2. Click **"Add Job"** button
+3. Fill in the company, position, and other details
+4. Click **"Save"**
+
+### Uploading Your Resume
+
+1. Click **"Resumes"** in the sidebar
+2. Drag and drop your resume file (PDF, DOCX, or TXT)
+3. Wait for it to upload and extract the text
+4. Your resume is now saved and ready to use!
+
+### Analyzing Your Resume (ATS Score)
+
+1. Click **"ATS Analyzer"** in the sidebar
+2. Paste your resume text (or click "Use for ATS" on a saved resume)
+3. Paste the job description
+4. Click **"Analyze Match"**
+5. See your score, missing keywords, and suggestions!
+
+### Generating a Cover Letter
+
+1. Click **"Cover Letter"** in the sidebar
+2. Enter the company name
+3. Paste your resume and the job description
+4. Choose a tone (Professional, Enthusiastic, or Conversational)
+5. Click **"Generate Cover Letter"**
+6. Copy and customize as needed!
+
+---
+
+## ❓ FAQ
+
+### Is my data private?
+Yes! Everything runs on your computer. Your resumes and job data are stored locally and never sent anywhere except to the AI for analysis (when you click analyze/generate).
+
+### Do I need to pay for the AI?
+Anthropic offers free credits when you sign up. For typical job searching, this should last a while. After that, it's pay-as-you-go (usually a few cents per analysis).
+
+### The ATS score seems low - is that bad?
+Not necessarily! The score shows keyword match percentage. Even 60-70% can be good, but the advise is to rech 85%. Focus on the "missing keywords" and suggestions to improve.
+
+### Can I use this offline?
+Job tracking and resume storage work offline. AI features (ATS analysis, cover letter generation) require internet.
+
+### Something's not working!
+1. Make sure Python is installed: Open terminal/command prompt and type `python --version`
+2. Check your API key is correct in the `.env` file
+3. Try deleting `jobtrack.db` and restarting (this resets your data)
+4. [Report a bug](https://github.com/gabrielajoy/jobtrack/issues)
+
+---
 
 ### Mac/Linux
 ```bash
