@@ -4,15 +4,44 @@ Uses Claude API to analyze resumes against job descriptions
 """
 
 import json
+import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+# Find .env file relative to this file's location
+PROJECT_ROOT = Path(__file__).parent.parent.parent  # backend/app/ -> backend/ -> project root
+ENV_PATH = PROJECT_ROOT / ".env"
 
-# Initialize the client
-client = Anthropic()
+if ENV_PATH.exists():
+    load_dotenv(ENV_PATH)
+    print(f"✓ Loaded .env from: {ENV_PATH}")
+else:
+    # Try current working directory as fallback
+    load_dotenv()
+    print(f"⚠ No .env found at {ENV_PATH}, trying current directory")
+
+# Check if API key is available
+API_KEY = os.getenv("ANTHROPIC_API_KEY")
+if not API_KEY:
+    print("⚠ WARNING: ANTHROPIC_API_KEY not found. AI features will not work.")
+    print(f"  Please create a .env file at: {PROJECT_ROOT}")
+    print(f"  With content: ANTHROPIC_API_KEY=your-key-here")
+    client = None
+else:
+    print(f"✓ API key loaded (starts with: {API_KEY[:20]}...)")
+    client = Anthropic()
+
+
+def _check_client():
+    """Check if Claude client is available, raise helpful error if not"""
+    if client is None:
+        raise RuntimeError(
+            "Claude API key not configured. "
+            "Please add ANTHROPIC_API_KEY to your .env file in the project root folder."
+        )
 
 
 def analyze_resume_ats(resume_text: str, job_description: str) -> dict:
@@ -22,6 +51,7 @@ def analyze_resume_ats(resume_text: str, job_description: str) -> dict:
     Returns:
         dict with score, missing_keywords, suggestions, and summary
     """
+    _check_client()
     
     prompt = f"""You are an expert ATS (Applicant Tracking System) analyzer and career coach.
 
@@ -78,6 +108,7 @@ def generate_cover_letter(
     """
     Generate a personalized cover letter.
     """
+    _check_client()
     
     prompt = f"""You are an expert career coach and professional writer.
 
@@ -117,6 +148,7 @@ def extract_job_details(job_description: str) -> dict:
     Returns:
         dict with company, position, location, salary_min, salary_max
     """
+    _check_client()
     
     prompt = f"""Extract job details from this job posting. 
 
@@ -180,6 +212,12 @@ def fetch_and_extract_from_url(url: str) -> dict:
     import urllib.request
     import urllib.error
     from html.parser import HTMLParser
+    
+    # Check API key first
+    if client is None:
+        return {
+            "error": "Claude API key not configured. Please add ANTHROPIC_API_KEY to your .env file."
+        }
     
     class TextExtractor(HTMLParser):
         def __init__(self):
@@ -276,6 +314,12 @@ Extract and respond in this exact JSON format (no markdown, just pure JSON):
             "error": f"Could not connect to URL: {str(e)}"
         }
     except Exception as e:
+        error_msg = str(e)
+        # Provide clearer error for API auth issues
+        if "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+            return {
+                "error": "Claude API authentication failed. Please check your ANTHROPIC_API_KEY in the .env file."
+            }
         return {
-            "error": f"Failed to fetch URL: {str(e)}"
+            "error": f"Failed to fetch URL: {error_msg}"
         }
