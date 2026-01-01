@@ -3,14 +3,15 @@ JobTrack FastAPI Application
 Main entry point for the API
 """
 
+from contextlib import contextmanager, asynccontextmanager
 import json
 import os
 import uuid
-from contextlib import contextmanager
 from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from .database import db
 from .models import (
@@ -20,23 +21,44 @@ from .models import (
     CoverLetterRequest, CoverLetterResponse,
     JobExtractRequest, JobExtractFromURLRequest, JobExtractResponse
 )
-from .ats_service import (
-    analyze_resume_ats,
-    generate_cover_letter,
-    extract_job_details,
-    fetch_and_extract_from_url
-)
+from .config import AI_MODE, get_mode_description, get_actual_mode
 from .file_service import parse_resume_file
+
+# Import the appropriate ATS service based on mode
+if AI_MODE == "claude":
+    from .ats_service import (
+        analyze_resume_ats,
+        generate_cover_letter,
+        extract_job_details,
+        fetch_and_extract_from_url
+    )
+    print(f"✓ AI Mode: Claude API")
+else:
+    from .ats_service_free import (
+        analyze_resume_ats,
+        generate_cover_letter,
+        extract_job_details,
+        fetch_and_extract_from_url
+    )
+    print(f"✓ AI Mode: {get_mode_description()}")
 
 # Directory to store uploaded resumes
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "resumes")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code here
+    db.initialize_schema()
+    yield
+    # Shutdown code here
+
 # Initialize FastAPI app
 app = FastAPI(
     title="JobTrack API",
     description="API for tracking job applications with AI-powered features",
-    version="1.1.0"
+    version="1.2.0",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -58,19 +80,15 @@ def get_db_connection():
     finally:
         conn.close()
 
-
-@app.on_event("startup")
-def startup():
-    """Initialize database on app startup"""
-    db.initialize_schema()
-
-
-@app.get("/")
+@app.get("/api")
 def root():
     """Health check endpoint"""
     return {
         "message": "JobTrack API is running",
-        "version": "1.1.0",
+        "version": "1.2.0",
+        "ai_mode": AI_MODE,
+        "ai_mode_actual": get_actual_mode(),
+        "ai_mode_description": get_mode_description(),
         "docs": "/docs"
     }
 
@@ -220,7 +238,10 @@ def get_stats():
         return {
             "total_jobs": total,
             "by_status": status_counts,
-            "recent_activity": recent_activity
+            "recent_activity": recent_activity,
+            "ai_mode": AI_MODE,
+            "ai_mode_actual": get_actual_mode(),
+            "ai_mode_description": get_mode_description()
         }
 
 
@@ -443,9 +464,6 @@ def extract_from_url(request: JobExtractFromURLRequest):
 
 
 # ==================== FRONTEND SERVING ====================
-
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 # Serve frontend at root
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")

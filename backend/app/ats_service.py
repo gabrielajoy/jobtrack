@@ -1,27 +1,49 @@
 """
-ATS Analysis Service
+ATS Analysis Service - Claude API Version
 Uses Claude API to analyze resumes against job descriptions
 """
 
 import json
+import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+ENV_PATH = PROJECT_ROOT / ".env"
 
-# Initialize the client
-client = Anthropic()
+if ENV_PATH.exists():
+    load_dotenv(ENV_PATH)
+else:
+    load_dotenv()
+
+# Check if API key is available
+API_KEY = os.getenv("ANTHROPIC_API_KEY")
+if not API_KEY:
+    print("⚠ WARNING: ANTHROPIC_API_KEY not found. Claude features will not work.")
+    print("  Please create a .env file at:", PROJECT_ROOT)
+    print("  With content: ANTHROPIC_API_KEY=your-key-here")
+    client = None
+else:
+    client = Anthropic()
+
+
+def _check_client():
+    """Check if Claude client is available"""
+    if client is None:
+        raise RuntimeError(
+            "Claude API key not configured. "
+            "Please add ANTHROPIC_API_KEY to your .env file."
+        )
 
 
 def analyze_resume_ats(resume_text: str, job_description: str) -> dict:
     """
     Analyze a resume against a job description for ATS compatibility.
-    
-    Returns:
-        dict with score, missing_keywords, suggestions, and summary
     """
+    _check_client()
     
     prompt = f"""You are an expert ATS (Applicant Tracking System) analyzer and career coach.
 
@@ -78,6 +100,7 @@ def generate_cover_letter(
     """
     Generate a personalized cover letter.
     """
+    _check_client()
     
     prompt = f"""You are an expert career coach and professional writer.
 
@@ -113,10 +136,8 @@ Write the cover letter now:"""
 def extract_job_details(job_description: str) -> dict:
     """
     Extract structured job details from a job description using AI.
-    
-    Returns:
-        dict with company, position, location, salary_min, salary_max
     """
+    _check_client()
     
     prompt = f"""Extract job details from this job posting. 
 
@@ -151,7 +172,6 @@ Notes:
     
     try:
         result = json.loads(response_text)
-        # Clean up null strings
         for key in result:
             if result[key] == "null" or result[key] == "None":
                 result[key] = None
@@ -170,16 +190,15 @@ Notes:
 def fetch_and_extract_from_url(url: str) -> dict:
     """
     Fetch a job posting from URL and extract details.
-    
-    Note: This won't work for LinkedIn (they block scraping).
-    Works best with: Greenhouse, Lever, company career pages, Indeed.
-    
-    Returns:
-        dict with company, position, location, salary_min, salary_max, job_description
     """
     import urllib.request
     import urllib.error
     from html.parser import HTMLParser
+    
+    if client is None:
+        return {
+            "error": "Claude API key not configured. Please add ANTHROPIC_API_KEY to your .env file."
+        }
     
     class TextExtractor(HTMLParser):
         def __init__(self):
@@ -204,7 +223,6 @@ def fetch_and_extract_from_url(url: str) -> dict:
             return ' '.join(self.text)
     
     try:
-        # Add headers to look like a browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -214,16 +232,13 @@ def fetch_and_extract_from_url(url: str) -> dict:
         with urllib.request.urlopen(req, timeout=10) as response:
             html = response.read().decode('utf-8', errors='ignore')
         
-        # Extract text from HTML
         parser = TextExtractor()
         parser.feed(html)
         page_text = parser.get_text()
         
-        # Limit text length for API
         if len(page_text) > 8000:
             page_text = page_text[:8000]
         
-        # Use AI to extract details
         prompt = f"""Extract job details from this job posting page content.
 
 PAGE CONTENT:
@@ -276,6 +291,11 @@ Extract and respond in this exact JSON format (no markdown, just pure JSON):
             "error": f"Could not connect to URL: {str(e)}"
         }
     except Exception as e:
+        error_msg = str(e)
+        if "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+            return {
+                "error": "Claude API authentication failed. Please check your ANTHROPIC_API_KEY in the .env file."
+            }
         return {
-            "error": f"Failed to fetch URL: {str(e)}"
+            "error": f"Failed to fetch URL: {error_msg}"
         }
